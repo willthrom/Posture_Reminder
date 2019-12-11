@@ -14,6 +14,7 @@ import android.preference.PreferenceManager;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
+import java.util.Calendar;
 
 import java.util.GregorianCalendar;
 
@@ -88,46 +89,50 @@ public class Alarm {
     //sends the notification
     public void sendNotif(Context context){
 
-        //get saved settings
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
-        String msg = preferences.getString("pref_notif_main_text", "");
-        String msgText = preferences.getString("pref_notif_secondary_text", "");
-        String sound = preferences.getString("pref_notif_sound", "");
+        int hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
+//        int weekDay = Calendar.getInstance().get(Calendar.DAY_OF_WEEK);
+//        boolean isWeekday = ((weekDay >= Calendar.MONDAY) && (weekDay <= Calendar.FRIDAY));
+        if (hour < 22 && hour > 7 /*&& isWeekday*/) {
+            //get saved settings
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+            String msg = preferences.getString("pref_notif_main_text", "");
+            String msgText = preferences.getString("pref_notif_secondary_text", "");
+            String sound = preferences.getString("pref_notif_sound", "");
 
 
+            // Builds a notification
+            NotificationCompat.Builder mBuilder =
+                    (NotificationCompat.Builder) new NotificationCompat.Builder(context)
+                            .setSmallIcon(R.drawable.ic_accessibility_white_36dp)
+                            .setColor(Color.BLUE)
+                            .setContentTitle(msg)
+                            .setTicker("Posture Reminder Plus")
+                            .setSound(Uri.parse(sound))
+                            .setContentText(msgText);
 
-        // Builds a notification
-        NotificationCompat.Builder mBuilder =
-                (NotificationCompat.Builder) new NotificationCompat.Builder(context)
-                        .setSmallIcon(R.drawable.ic_accessibility_white_36dp)
-                        .setColor(Color.BLUE)
-                        .setContentTitle(msg)
-                        .setTicker("Posture Reminder")
-                        .setSound(Uri.parse(sound))
-                        .setContentText(msgText);
+            // mBuilder.setDefaults(Notification.DEFAULT_SOUND);
+            boolean vibrateOn = PreferenceManager.getDefaultSharedPreferences
+                    (context).getBoolean("pref_notif_vibrate", false);
 
-       // mBuilder.setDefaults(Notification.DEFAULT_SOUND);
-        boolean vibrateOn = PreferenceManager.getDefaultSharedPreferences
-                (context).getBoolean("pref_notif_vibrate", false);
+            //sets vibration
+            if (vibrateOn) {
+                long vib[] = {400, 600};
+                mBuilder.setVibrate(vib);
+            }
 
-        //sets vibration
-        if (vibrateOn){
-            long vib[] = {400,600};
-            mBuilder.setVibrate(vib);
+
+            // Auto cancels the notification when clicked on in the task bar
+            mBuilder.setAutoCancel(true);
+
+
+            mBuilder.setOnlyAlertOnce(true);
+
+            // Gets a NotificationManager which is used to notify the user of the background event
+            NotificationManager mNotificationManager =
+                    (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+
+            // Post the notification
+            mNotificationManager.notify(1, mBuilder.build());
         }
-
-
-        // Auto cancels the notification when clicked on in the task bar
-        mBuilder.setAutoCancel(true);
-
-
-        mBuilder.setOnlyAlertOnce(true);
-
-        // Gets a NotificationManager which is used to notify the user of the background event
-        NotificationManager mNotificationManager =
-                (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-
-        // Post the notification
-        mNotificationManager.notify(1, mBuilder.build());
     }
 }
